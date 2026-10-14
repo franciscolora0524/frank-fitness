@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Frank Fitness</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<style>body{margin:0;background:#0d1117;color:#e6edf3;font-family:system-ui,-apple-system,sans-serif}main{max-width:720px;margin:auto;padding:16px}h1{font-size:1.6rem;margin:.2em 0}.sub{color:#8b949e}.card{background:#161b22;border:1px solid #30363d;border-radius:14px;padding:16px;margin:12px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid .card{margin:0}.big{font-size:1.8rem;font-weight:700}.lbl{color:#8b949e;font-size:.85rem}.bar{background:#30363d;border-radius:99px;height:14px;overflow:hidden}.bar>div{height:100%;background:linear-gradient(90deg,#f97316,#22c55e);width:0}.ok{color:#22c55e}.warn{color:#f59e0b}.bad{color:#ef4444}.motto{font-size:1.1rem;font-style:italic;color:#fbbf24}ul{list-style:none;padding:0;margin:0}li{padding:8px 0;border-bottom:1px solid #30363d}li:last-child{border:0}small{color:#8b949e}</style></head><body><main>
+<style>body{margin:0;background:#0d1117;color:#e6edf3;font-family:system-ui,-apple-system,sans-serif}main{max-width:720px;margin:auto;padding:16px}h1{font-size:1.6rem;margin:.2em 0}.sub{color:#8b949e}.card{background:#161b22;border:1px solid #30363d;border-radius:14px;padding:16px;margin:12px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid .card{margin:0}.big{font-size:1.8rem;font-weight:700}.lbl{color:#8b949e;font-size:.85rem}.bar{background:#30363d;border-radius:99px;height:14px;overflow:hidden}.bar>div{height:100%;background:linear-gradient(90deg,#f97316,#22c55e);width:0}.ok{color:#22c55e}.warn{color:#f59e0b}.bad{color:#ef4444}.motto{font-size:1.1rem;font-style:italic;color:#fbbf24}ul{list-style:none;padding:0;margin:0}li{padding:8px 0;border-bottom:1px solid #30363d}li:last-child{border:0}small{color:#8b949e}input[type=date]{background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:8px;padding:6px;font-size:1rem}button{background:#21262d;color:#e6edf3;border:1px solid #30363d;border-radius:8px;padding:6px 14px;font-size:1.1rem}.row{display:flex;justify-content:space-between;padding:4px 0}table{width:100%;border-collapse:collapse;font-size:.85rem}td,th{padding:6px 4px;border-bottom:1px solid #30363d;text-align:right}td:first-child,th:first-child{text-align:left}tr.click{cursor:pointer}tr.click:hover{background:#21262d}</style></head><body><main>
 <h1>Frank's Fitness Dashboard 💪</h1><div class="sub" id="upd">Loading…</div>
 <div class="card"><div class="motto" id="motto"></div></div>
 <div class="card"><div class="lbl">Progress to 185 lbs</div><div class="big" id="wt">–</div><div class="bar"><div id="pbar"></div></div><div class="sub" id="lost" style="margin-top:6px"></div></div>
@@ -11,6 +11,11 @@
 <div class="card"><div class="lbl">Snack-free nights (week)</div><div class="big" id="sf">–</div><small id="streak"></small></div>
 <div class="card"><div class="lbl">Last bedtime</div><div class="big" id="bed">–</div><small id="beddate"></small></div>
 <div class="card"><div class="lbl">Logged days (week)</div><div class="big" id="days">–</div></div></div>
+<div class="card"><div class="lbl">This week's deficit</div><div class="big" id="wdef">–</div><small id="wlbs"></small></div>
+<div class="card"><div class="lbl">Day view</div><div style="display:flex;gap:8px;align-items:center;margin:8px 0"><button id="prev">‹</button><input type="date" id="dpick"><button id="next">›</button></div>
+<div id="dsum"></div><div class="lbl" style="margin-top:10px">Meals</div><ul id="dmeals"></ul><div class="lbl" style="margin-top:10px">Workouts</div><ul id="dwo"></ul><div class="lbl" style="margin-top:10px">Habits</div><div id="dhab"></div></div>
+<div class="card"><div class="lbl">Daily history (tap a day)</div><table><thead><tr><th>Date</th><th>In</th><th>Burned</th><th>Deficit</th><th>Protein</th><th>Workout</th></tr></thead><tbody id="hist"></tbody></table></div>
+<div class="card"><div class="lbl">Workouts</div><ul id="allwo"></ul></div>
 <div class="card"><div class="lbl">Recent food</div><ul id="food"></ul></div>
 <div class="card"><div class="lbl">Recent workouts</div><ul id="train"></ul></div>
 </main><script>
@@ -41,6 +46,25 @@ const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[
 const F=food.map(r=>({...r,_d:pd(r["Date"])})).sort((a,b)=>b._d-a._d).slice(0,8);
 document.getElementById("food").innerHTML=F.map(r=>`<li><b>${esc(r["Meal"]||"")}</b> · ${esc(r["Description"]||"")}<br><small>${fd(r._d)} ${ft(r["Time"])} · ${num(r["Est. Calories"])} cal · ${num(r["Est. Protein (g)"])}g protein</small></li>`).join("")||"<li>No food logged yet</li>";
 const T=tr.map(r=>({...r,_d:pd(r["Date"])})).sort((a,b)=>b._d-a._d).slice(0,6);
-train.innerHTML=T.map(r=>`<li><b>${esc(r["Type"]||"")}</b> · ${esc(r["Duration (min)"]||"")} min<br><small>${fd(r._d)} · ${esc(r["Workout details"]||"")}</small></li>`).join("")||"<li>No workouts yet</li>";
+train.innerHTML=T.map(r=>`<li><b>${esc(r["Type"]||"")}</b> · ${esc(r["Duration (min)"]||"")} min · ${num(r["Calories Burned"])} cal (est.)<br><small>${fd(r._d)} · ${esc(r["Workout details"]||"")}</small></li>`).join("")||"<li>No workouts yet</li>";
+
+const BASE=2400,key=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const days={};const D=k=>days[k]=days[k]||{meals:[],wo:[],hab:null};
+food.forEach(r=>{const d=pd(r["Date"]);if(d)D(key(d)).meals.push(r)});tr.forEach(r=>{const d=pd(r["Date"]);if(d)D(key(d)).wo.push(r)});hab.forEach(r=>{const d=pd(r["Date"]);if(d)D(key(d)).hab=r});
+const stat=k=>{const x=days[k]||{meals:[],wo:[]};const cin=x.meals.reduce((a,r)=>a+num(r["Est. Calories"]),0),p=x.meals.reduce((a,r)=>a+num(r["Est. Protein (g)"]),0),b=x.wo.reduce((a,r)=>a+num(r["Calories Burned"]),0);return{cin,p,b,out:BASE+b,def:BASE+b-cin,logged:x.meals.length>0}};
+const sg=v=>(v>=0?"+":"")+Math.round(v).toLocaleString();
+let wd=0;Object.keys(days).forEach(k=>{const[y,m,dd]=k.split("-");if(new Date(y,m-1,dd)>=ws){const t=stat(k);if(t.logged)wd+=t.def}});
+wdef.textContent=sg(wd)+" cal";wdef.className="big "+(wd>=0?"ok":"bad");wlbs.textContent=`≈ ${(wd/3500).toFixed(2)} lbs from deficit (deficit ÷ 3,500) · logged days only`;
+const nyToday=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York"}).format(new Date());
+const show=k=>{dpick.value=k;const[y,m,dd]=k.split("-");const x=days[k]||{meals:[],wo:[],hab:null},t=stat(k);
+dsum.innerHTML=(t.logged?"":`<div class="warn">Food not logged for this day</div>`)+[["Calories in",t.logged?t.cin.toLocaleString():"not logged"],["Workout burn",t.b.toLocaleString()],["Baseline (est., resting + daily activity)",BASE.toLocaleString()],["Total out",t.out.toLocaleString()],["Deficit",t.logged?`<span class="${t.def>=0?"ok":"bad"}">${sg(t.def)}</span>`:"not logged"],["Protein",t.logged?Math.round(t.p)+"g":"–"]].map(a=>`<div class="row"><span>${a[0]}</span><b>${a[1]}</b></div>`).join("");
+dmeals.innerHTML=x.meals.map(r=>`<li><b>${esc(r["Meal"])}</b> ${ft(r["Time"])}<br><small>${esc(r["Description"])} · ${num(r["Est. Calories"])} cal · ${num(r["Est. Protein (g)"])}g</small></li>`).join("")||"<li><small>No meals logged</small></li>";
+dwo.innerHTML=x.wo.map(r=>`<li><b>${esc(r["Type"])}</b> · ${esc(r["Duration (min)"])} min · ${num(r["Calories Burned"])} cal (est.)<br><small>${esc(r["Workout details"])}</small></li>`).join("")||"<li><small>Rest day</small></li>";
+const h=x.hab;dhab.innerHTML=h?`<div class="row"><span>Bed time</span><b>${ft(h["Bed time"])}</b></div><div class="row"><span>Late snack</span><b>${esc(h["Late snack (Y/N)"])}</b></div><div class="row"><span>Gaming past midnight</span><b>${esc(h["Gaming past midnight (Y/N)"])}</b></div><div class="row"><span>Drinks</span><b>${esc(h["Drinks"])}</b></div>`:"<small>No habits logged</small>"};
+const shift=n=>{const[y,m,dd]=dpick.value.split("-");show(key(new Date(y,m-1,+dd+n)))};
+prev.onclick=()=>shift(-1);next.onclick=()=>shift(1);dpick.onchange=()=>dpick.value&&show(dpick.value);show(nyToday);
+hist.innerHTML=Object.keys(days).sort().reverse().map(k=>{const t=stat(k),[y,m,dd]=k.split("-");return`<tr class="click" data-k="${k}"><td>${fd(new Date(y,m-1,dd))}</td><td>${t.logged?t.cin:"–"}</td><td>${t.b}</td><td class="${t.logged?(t.def>=0?"ok":"bad"):""}">${t.logged?sg(t.def):"n/l"}</td><td>${t.logged?Math.round(t.p)+"g":"–"}</td><td>${days[k].wo.map(r=>esc(r["Type"])).join(", ")||"–"}</td></tr>`}).join("");
+hist.querySelectorAll("tr").forEach(r=>r.onclick=()=>{show(r.dataset.k);dpick.scrollIntoView({behavior:"smooth",block:"center"})});
+allwo.innerHTML=tr.map(r=>({...r,_d:pd(r["Date"])})).sort((a,b)=>b._d-a._d).map(r=>`<li><b>${fd(r._d)} · ${esc(r["Type"])}</b> · ${esc(r["Duration (min)"])} min · ${num(r["Calories Burned"])} cal (est.)<br><small>${esc(r["Workout details"])}${r["Notes"]?" — "+esc(r["Notes"]):""}</small></li>`).join("")||"<li>No workouts yet</li>";
 upd.textContent="Live from your log · updated "+now.toLocaleString("en-US",{weekday:"short",hour:"numeric",minute:"2-digit"});})();
 </script></body></html>
